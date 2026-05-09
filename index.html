@@ -19,9 +19,9 @@
   --stone-light: #cac6c0;
   --stone-pale: #e6e3de;
   --text: #2e2c28;
-  --text-soft: #706c66;
-  --text-faint: #a8a49e;
-  --text-xfaint: #c0bbb4;
+  --text-soft: #4a4742;      /* was #706c66 — darkened */
+  --text-faint: #6b6762;     /* was #a8a49e — darkened significantly */
+  --text-xfaint: #8a8680;    /* was #c0bbb4 — darkened significantly */
   --radius: 16px;
   --radius-lg: 22px;
   --radius-pill: 100px;
@@ -274,7 +274,7 @@ input[type=range]:focus::-webkit-slider-thumb {
   font-family: 'Lora', serif; font-size: 18px; font-weight: 400;
   color: var(--text); margin-bottom: 5px;
 }
-.option-card p { font-size: 13px; color: var(--text-faint); font-weight: 300; line-height: 1.6; }
+.option-card p { font-size: 13px; color: var(--text-soft); font-weight: 300; line-height: 1.6; }
 
 /* ====== HIGH (7–10) ====== */
 #screen-high {
@@ -304,10 +304,10 @@ input[type=range]:focus::-webkit-slider-thumb {
 .action-done:hover { background: var(--sage); color: white; }
 .action-another {
   display: block; margin-top: 18px; font-size: 12px;
-  color: var(--text-xfaint); cursor: pointer; background: none;
+  color: var(--text-faint); cursor: pointer; background: none;
   border: none; font-family: 'DM Sans', sans-serif; transition: color 0.2s;
 }
-.action-another:hover { color: var(--text-faint); }
+.action-another:hover { color: var(--text-soft); }
 .high-back-btn {
   margin-top: 36px; font-size: 12px; color: var(--text-faint);
   cursor: pointer; background: none; border: none;
@@ -336,7 +336,7 @@ textarea.dump-area::placeholder { color: var(--text-xfaint); font-style: italic;
   margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--stone-pale);
   display: flex; justify-content: space-between; align-items: center;
 }
-.dump-hint { font-size: 12px; color: var(--text-xfaint); font-style: italic; font-family: 'Lora', serif; }
+.dump-hint { font-size: 12px; color: var(--text-faint); font-style: italic; font-family: 'Lora', serif; }
 .dump-clear {
   font-size: 12px; color: var(--text-faint); background: none;
   border: none; cursor: pointer; font-family: 'DM Sans', sans-serif;
@@ -391,7 +391,7 @@ textarea.reframe-area::placeholder { color: var(--text-xfaint); font-style: ital
 .reframe-response.visible { display: block; }
 .reframe-response-eyebrow {
   font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase;
-  color: var(--text-xfaint); margin-bottom: 14px; display: block;
+  color: var(--text-faint); margin-bottom: 14px; display: block;
 }
 .reframe-response-text {
   font-family: 'Lora', serif; font-size: 16.5px; font-weight: 400;
@@ -413,7 +413,7 @@ textarea.reframe-area::placeholder { color: var(--text-xfaint); font-style: ital
 }
 .reflection-meta {
   font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase;
-  color: var(--text-xfaint); margin-bottom: 14px; display: block;
+  color: var(--text-faint); margin-bottom: 14px; display: block;
 }
 textarea.reflection-area {
   width: 100%; border: none; outline: none; resize: none;
@@ -472,7 +472,7 @@ textarea.reflection-area::placeholder { color: var(--text-xfaint); font-style: i
 .task-lbl { font-size: 14px; color: var(--text-soft); font-weight: 300; }
 .task-lbl.done { text-decoration: line-through; color: var(--text-xfaint); }
 .task-divider { border: none; border-top: 1px solid var(--stone-pale); margin: 22px 0; }
-.tasks-note { margin-top: 24px; font-size: 12px; color: var(--text-xfaint); font-style: italic; font-family: 'Lora', serif; }
+.tasks-note { margin-top: 24px; font-size: 12px; color: var(--text-faint); font-style: italic; font-family: 'Lora', serif; }
 
 /* ====== BREATHE MODAL ====== */
 .modal-overlay {
@@ -756,18 +756,10 @@ function nameKeydown(e) { if(e.key==='Enter') startApp(); }
 function startApp(skip=false) {
   const raw = document.getElementById('name-input').value.trim();
   userName = (!skip && raw) ? raw : '';
-
-  // update nav name
   const navNameEl = document.getElementById('nav-name-display');
   navNameEl.textContent = userName ? userName : '';
-
-  // show nav
   document.getElementById('main-nav').style.display = 'flex';
-
-  // update check-in heading
   updateCheckinHeading();
-
-  // go to checkin
   showScreen('checkin');
 }
 
@@ -851,32 +843,45 @@ function closeBreathe() {
 }
 
 // ===== AI REFRAME =====
+// Uses the Anthropic API via the built-in proxy (no API key needed in this environment)
 async function doReframe() {
   const txt = document.getElementById('rf-input').value.trim();
   if(!txt) return;
   const btn = document.getElementById('rf-btn');
   const loading = document.getElementById('rf-loading');
   const resp = document.getElementById('rf-response');
-  btn.disabled=true;
+  btn.disabled = true;
   loading.classList.add('visible');
   resp.classList.remove('visible');
+
   try {
-    const res = await fetch('https://api.anthropic.com/v1/messages',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({
-        model:'claude-sonnet-4-20250514',
-        max_tokens:1000,
-        system:`You are a calm, gentle presence for a student who is feeling moderate stress (not in crisis).
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': 'placeholder', // handled by the environment proxy
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        system: `You are a calm, gentle presence for a student who is feeling moderate stress (not in crisis).
 Your role: offer a very brief reframe — not advice, not solutions, not affirmations.
 Just 2–4 quiet sentences that help them see their situation with a little more softness or space.
 Avoid clichés. Don't start with "It sounds like" or "I understand". Write like a calm friend, not a therapist.
 No bullet points. No lists. Plain flowing prose only.`,
-        messages:[{role:'user',content:txt}]
+        messages: [{ role: 'user', content: txt }]
       })
     });
+
     const data = await res.json();
-    const out = data.content?.map(b=>b.text||'').join('')||"Couldn't reach the server just now.";
+
+    if (data.error) {
+      throw new Error(data.error.message || 'API error');
+    }
+
+    const out = data.content?.map(b => b.text || '').join('') || "Couldn't reach the server just now.";
     document.getElementById('rf-text').textContent = out;
     resp.classList.add('visible');
   } catch(e) {
@@ -884,11 +889,12 @@ No bullet points. No lists. Plain flowing prose only.`,
     resp.classList.add('visible');
   } finally {
     loading.classList.remove('visible');
-    btn.disabled=false;
+    btn.disabled = false;
   }
 }
+
 function clearReframe() {
-  document.getElementById('rf-input').value='';
+  document.getElementById('rf-input').value = '';
   document.getElementById('rf-response').classList.remove('visible');
 }
 
