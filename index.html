@@ -856,20 +856,8 @@ async function doReframe() {
   resp.classList.remove('visible');
 
   try {
-    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Authorization": "Bearer AIzaSyDjSEzKLZp4wURfl012u8lkPxK9w6TJET8",
-        "Content-Type": "application/json",
-        "HTTP-Referer": "https://anshika-singh-12.github.io/Calm/",
-        "X-Title": "Calm"
-      },
-      body: JSON.stringify({
-        model: "mistralai/mistral-7b-instruct:free",
-        messages: [
-          {
-            role: "system",
-            content: `
+    const result = await puter.ai.chat(
+      `
 You are a calm and gentle presence.
 
 Offer soft reframes for stressful thoughts.
@@ -877,29 +865,18 @@ Offer soft reframes for stressful thoughts.
 Do NOT give advice.
 Do NOT sound clinical.
 Keep responses under 4 sentences.
-Avoid clichés.
-`
-          },
-          {
-            role: "user",
-            content: txt
-          }
-        ]
-      })
-    });
 
-    const data = await response.json();
-
-    console.log(data);
-
-    if (data.error) {
-      throw new Error(data.error.message);
-    }
-
-    const out = data.choices?.[0]?.message?.content;
+User:
+${txt}
+      `,
+      {
+        model: "gpt-4.1-mini"
+      }
+    );
 
     document.getElementById('rf-text').textContent =
-      out || "Couldn't generate a response right now.";
+      result?.message?.content ||
+      "Couldn't generate a response right now.";
 
     resp.classList.add('visible');
 
@@ -907,7 +884,7 @@ Avoid clichés.
     console.error(e);
 
     document.getElementById('rf-text').textContent =
-      "Couldn't connect right now. Please try again.";
+      "Couldn't connect right now.";
 
     resp.classList.add('visible');
 
@@ -929,6 +906,6 @@ function addTaskBtn(bucket){
   li.appendChild(chk); li.appendChild(lbl); list.appendChild(li);
   inp.value=''; inp.focus();
 }
-</script>
+<script src="https://js.puter.com/v2/"></script>
 </body>
 </html>
